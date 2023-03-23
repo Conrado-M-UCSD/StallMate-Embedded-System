@@ -1,16 +1,24 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
+#include "KioskColors.h"
+
 #define SENSOR_PIN 15
 #define LED_CNT 4
 #define LED_PIN 13
 
-
 #define WAIT_TIME 75 
 
-#define EFFECT_BLUE_FADE 1
-#define EFFECT_STATIC_BLUE 11
-#define EFFECT_GREEN_BLINK 2
+#define SENSOR_ACT   1
+
+#define EFFECT_SOLID_BLUE_FADE 1
+#define EFFECT_MEDBLUE_FADE    11
+#define EFFECT_STATIC_MEDBLUE  12
+#define EFFECT_MEDBLUE_CYCLE   13
+#define EFFECT_GREEN_BLINK     2
+#define EFFECT_GREEN_FADE      21
+#define EFFECT_RED_BLINK       3
+#define EFFECT_YELLOW_BLINK    4
 
 
 bool sensorState = HIGH; 
@@ -64,13 +72,14 @@ byte effectLoop(uint8_t effect_code) {
 
   byte iterationCnt = 0; 
   bool increment = true; 
+
   byte colorR; 
   byte colorG; 
   byte colorB;
 
   switch (effect_code) {
 
-    case EFFECT_BLUE_FADE: {
+    case EFFECT_SOLID_BLUE_FADE: {
       while (1) {
         Serial.printf("Iteration: %d\n", iterationCnt);
         for (byte i = 0; i < LED_CNT; i++) {
@@ -84,7 +93,7 @@ byte effectLoop(uint8_t effect_code) {
 
         if (sensorRead() == true) {
           Serial.println("Detected sensor input, exiting current effect loop");
-          break;
+          return SENSOR_ACT;
         }
 
         if (iterationCnt == 0) {
@@ -109,13 +118,159 @@ byte effectLoop(uint8_t effect_code) {
       break;
     }
 
-    case EFFECT_GREEN_BLINK: 
-      break; 
+    case EFFECT_MEDBLUE_FADE: {
+      
+      while (1) {
+        colorR = COLOR_MEDBLUE_R;
+        colorG = COLOR_MEDBLUE_G - iterationCnt;
+        colorB = COLOR_MEDBLUE_B - (2 * iterationCnt);
 
-    case EFFECT_STATIC_BLUE: {
-      colorR = 34; 
-      colorG = 70; 
-      colorB = 168;
+        for (byte i = 0; i < LED_CNT; i++) {
+          leds[i].setRGB(colorR, colorG, colorB);
+        }
+        FastLED.show();
+
+        if (sensorRead() == true) {
+          return SENSOR_ACT;
+        }
+
+        if (iterationCnt == 0) {
+          increment = true; 
+        }
+
+        if (iterationCnt > 63) {
+          increment = false; 
+        }
+
+        switch (increment) {
+
+          case true: 
+            iterationCnt++;
+            break;
+          case false: 
+            iterationCnt--;
+            break;
+        }
+        delay(WAIT_TIME);
+      }
+      break;
+    }
+    
+    case EFFECT_MEDBLUE_CYCLE: {
+
+      colorR = COLOR_MEDBLUE_R; 
+      colorG = COLOR_MEDBLUE_G;
+      colorB = COLOR_MEDBLUE_B;
+
+      for (byte i = 0; i < LED_CNT; i++) {
+        leds[i] = CRGB::Black;
+      }
+
+      while (1) {
+        for (byte i = 0; i < LED_CNT; i++) {
+          leds[i].setRGB(colorR, colorG, colorB);
+          FastLED.show(); 
+          leds[i] = CRGB::Black;
+          delay(WAIT_TIME * 2);
+        }
+      }
+    }
+    
+    case EFFECT_GREEN_BLINK: {
+      colorR = 0; 
+      colorG = 255; 
+      colorB = 0; 
+
+      for (byte i = 0; i < LED_CNT; i++) {
+        leds[i].setRGB(colorR, colorG, colorB); 
+      }
+      FastLED.show(); 
+      delay(WAIT_TIME * 3); 
+      
+      for (byte i = 0; i < LED_CNT; i++) {
+        leds[i] = CRGB::Black;
+      }
+      FastLED.show();
+      delay(WAIT_TIME * 3); 
+
+      for (byte i = 0; i < LED_CNT; i++) {
+        leds[i].setRGB(colorR, colorG, colorB); 
+      }
+      FastLED.show(); 
+      delay(WAIT_TIME * 3); 
+      
+      for (byte i = 0; i < LED_CNT; i++) {
+        leds[i] = CRGB::Black;
+      }
+      FastLED.show();
+      break; 
+    }
+
+    case EFFECT_RED_BLINK: {
+      colorR = 255; 
+      colorG = 0; 
+      colorB = 0; 
+
+      for (byte i = 0; i < LED_CNT; i++) {
+        leds[i].setRGB(colorR, colorG, colorB); 
+      }
+      FastLED.show(); 
+      delay(WAIT_TIME * 3); 
+      
+      for (byte i = 0; i < LED_CNT; i++) {
+        leds[i] = CRGB::Black;
+      }
+      FastLED.show();
+      delay(WAIT_TIME * 3); 
+
+      for (byte i = 0; i < LED_CNT; i++) {
+        leds[i].setRGB(colorR, colorG, colorB); 
+      }
+      FastLED.show(); 
+      delay(WAIT_TIME * 3); 
+      
+      for (byte i = 0; i < LED_CNT; i++) {
+        leds[i] = CRGB::Black;
+      }
+      FastLED.show();
+      break; 
+    }
+
+    case EFFECT_YELLOW_BLINK: {
+      colorR = 255; 
+      colorG = 255; 
+      colorB = 0; 
+
+      for (byte i = 0; i < LED_CNT; i++) {
+        leds[i].setRGB(colorR, colorG, colorB); 
+      }
+      FastLED.show(); 
+      delay(WAIT_TIME * 3); 
+      
+      for (byte i = 0; i < LED_CNT; i++) {
+        leds[i] = CRGB::Black;
+      }
+      FastLED.show();
+      delay(WAIT_TIME * 3); 
+
+      for (byte i = 0; i < LED_CNT; i++) {
+        leds[i].setRGB(colorR, colorG, colorB); 
+      }
+      FastLED.show(); 
+      delay(WAIT_TIME * 3); 
+      
+      for (byte i = 0; i < LED_CNT; i++) {
+        leds[i] = CRGB::Black;
+      }
+      FastLED.show();
+      break; 
+    }
+
+    case EFFECT_STATIC_MEDBLUE: {
+
+      colorR = COLOR_MEDBLUE_R;
+      colorG = COLOR_MEDBLUE_G; 
+      colorB = COLOR_MEDBLUE_B;
       for (byte i = 0; i < LED_CNT; i++) {
         leds[i].setRGB(colorR, colorG, colorB);
       }
@@ -124,6 +279,8 @@ byte effectLoop(uint8_t effect_code) {
       break;
     }
   }
+
+  return 1;
 }
 
 /* 
@@ -135,12 +292,18 @@ void setup() {
   Serial.begin(115200); 
   ledInit();
 
+  effectLoop(EFFECT_GREEN_BLINK);
+  effectLoop(EFFECT_YELLOW_BLINK);
+  effectLoop(EFFECT_RED_BLINK);
+  // effectLoop(EFFECT_MEDBLUE_CYCLE);
 }
 
 void loop() {
 
-  delay(69); 
-  effectLoop(EFFECT_STATIC_BLUE);
+  delay(WAIT_TIME / 3); 
+  if (effectLoop(EFFECT_MEDBLUE_FADE) == SENSOR_ACT) {
+    effectLoop(EFFECT_GREEN_BLINK);
+  }
   // sensorState = digitalRead(SENSOR_PIN);
   // if (sensorRead() == true) {
   //   for (byte i = 0; i < LED_CNT; i++) {
