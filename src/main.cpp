@@ -5,7 +5,11 @@
 #define LED_CNT 4
 #define LED_PIN 13
 
-#define EFFECT_BLUE_TO_WHITE_FADE 1
+
+#define WAIT_TIME 75 
+
+#define EFFECT_BLUE_FADE 1
+#define EFFECT_STATIC_BLUE 11
 #define EFFECT_GREEN_BLINK 2
 
 
@@ -39,7 +43,7 @@ void ledInit() {
   pinMode(SENSOR_PIN, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
   setLightBlue();
-
+  Serial.println("LEDs have been initialized successfully");
 }
 
 /* 
@@ -58,22 +62,67 @@ bool sensorRead() {
 
 byte effectLoop(uint8_t effect_code) {
 
+  byte iterationCnt = 0; 
+  bool increment = true; 
+  byte colorR; 
+  byte colorG; 
+  byte colorB;
+
   switch (effect_code) {
-    case EFFECT_BLUE_TO_WHITE_FADE:
+
+    case EFFECT_BLUE_FADE: {
       while (1) {
+        Serial.printf("Iteration: %d\n", iterationCnt);
         for (byte i = 0; i < LED_CNT; i++) {
-          leds[i] = CRGB::DodgerBlue;
+          colorR = 0; 
+          colorG = 0;
+          // colorG = 41 - (iterationCnt);
+          colorB = 221 - (iterationCnt * 5);
+          leds[i].setRGB(colorR, colorG, colorB);
         }
         FastLED.show();
 
         if (sensorRead() == true) {
+          Serial.println("Detected sensor input, exiting current effect loop");
           break;
         }
+
+        if (iterationCnt == 0) {
+          increment = true; 
+        }
+
+        if (iterationCnt > 39) {
+          increment = false; 
+        }
+
+        switch (increment) {
+          case true: 
+            iterationCnt++; 
+            break; 
+          case false: 
+            iterationCnt--;
+            break;
+        }
+
+        delay(WAIT_TIME);
       }
       break;
+    }
 
     case EFFECT_GREEN_BLINK: 
       break; 
+
+    case EFFECT_STATIC_BLUE: {
+      colorR = 34; 
+      colorG = 70; 
+      colorB = 168;
+      for (byte i = 0; i < LED_CNT; i++) {
+        leds[i].setRGB(colorR, colorG, colorB);
+      }
+      FastLED.show();
+      delay(WAIT_TIME);
+      break;
+    }
   }
 }
 
@@ -91,8 +140,7 @@ void setup() {
 void loop() {
 
   delay(69); 
-
-  effectLoop(EFFECT_BLUE_TO_WHITE_FADE);
+  effectLoop(EFFECT_STATIC_BLUE);
   // sensorState = digitalRead(SENSOR_PIN);
   // if (sensorRead() == true) {
   //   for (byte i = 0; i < LED_CNT; i++) {
