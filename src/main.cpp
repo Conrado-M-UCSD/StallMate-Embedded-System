@@ -2,54 +2,114 @@
 #include <FastLED.h>
 
 #define SENSOR_PIN 15
-#define LED_CNT 5
+#define LED_CNT 4
 #define LED_PIN 13
+
+#define EFFECT_BLUE_TO_WHITE_FADE 1
+#define EFFECT_GREEN_BLINK 2
+
 
 bool sensorState = HIGH; 
 bool hasRevertedLeds = true; 
 
 CRGB leds[LED_CNT];
 
+/* 
+ * Iterate through RGB LEDs and set 
+ * all colors to light blue
+ *
+ */
 void setLightBlue() {
     for (byte i = 0; i < LED_CNT; i++) {
     leds[i] = CRGB::DodgerBlue; 
     FastLED.show();
-    delay(200); 
+    delay(25); 
   }
 }
 
-void setup() {
-
-  Serial.begin(115200); 
+/* 
+ * void ledInit()
+ * 
+ * Adds the kiosk's LEDs to the FastLED object.
+ * Sets colors to light blue.
+ * 
+ */
+void ledInit() {
   FastLED.addLeds<NEOPIXEL, LED_PIN> (leds, LED_CNT);
-
-  setLightBlue();
   pinMode(SENSOR_PIN, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
-  // put your setup code here, to run once:
+  setLightBlue();
+
+}
+
+/* 
+ * Poll state of kiosk IR sensor
+ *
+ * @returns true if sensor detected object, false otherwise.  
+ */
+bool sensorRead() {
+
+  // sensorState = digitalRead(SENSOR_PIN);
+  // if (sensorState == LOW) { // IR sensor triggered
+  //   return true;
+  // }
+  return false;
+}
+
+byte effectLoop(uint8_t effect_code) {
+
+  switch (effect_code) {
+    case EFFECT_BLUE_TO_WHITE_FADE:
+      while (1) {
+        for (byte i = 0; i < LED_CNT; i++) {
+          leds[i] = CRGB::DodgerBlue;
+        }
+        FastLED.show();
+
+        if (sensorRead() == true) {
+          break;
+        }
+      }
+      break;
+
+    case EFFECT_GREEN_BLINK: 
+      break; 
+  }
+}
+
+/* 
+ * Arduino Setup function
+ * Runs once before loop
+ *
+ * */
+void setup() {
+  Serial.begin(115200); 
+  ledInit();
+
 }
 
 void loop() {
 
-  delay(150); 
-  sensorState = digitalRead(SENSOR_PIN);
-  if (sensorState == LOW) {
-    for (byte i = 0; i < LED_CNT; i++) {
-      leds[i] = CRGB::LawnGreen; 
-      FastLED.show(); 
-    }
-    hasRevertedLeds = false; 
-    digitalWrite(LED_BUILTIN, HIGH); 
-    Serial.println("Detected proximity!");
-    delay(120); 
-    digitalWrite(LED_BUILTIN, LOW); 
-  }
+  delay(69); 
 
-  else {
-    if (hasRevertedLeds == false) {
-      setLightBlue(); 
-    }
-  }
+  effectLoop(EFFECT_BLUE_TO_WHITE_FADE);
+  // sensorState = digitalRead(SENSOR_PIN);
+  // if (sensorRead() == true) {
+  //   for (byte i = 0; i < LED_CNT; i++) {
+  //     leds[i] = CRGB::LawnGreen; 
+  //     FastLED.show(); 
+  //   }
+  //   hasRevertedLeds = false; 
+  //   digitalWrite(LED_BUILTIN, HIGH); 
+  //   Serial.println("Detected proximity!");
+  //   delay(120); 
+  //   digitalWrite(LED_BUILTIN, LOW); 
+  // }
 
-  // put your main code here, to run repeatedly:
+  // else {
+  //   if (hasRevertedLeds == false) {
+  //     setLightBlue(); 
+  //   }
+  // }
+
 }
