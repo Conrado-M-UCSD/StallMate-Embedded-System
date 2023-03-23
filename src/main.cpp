@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <FastLED.h>
+#include <WiFi.h>
+#include <WebServer.h>
 
 #include "KioskColors.h"
 
@@ -24,7 +26,41 @@
 bool sensorState = HIGH; 
 bool hasRevertedLeds = true; 
 
+const char* ssid = "StallMate-001";
+const char* key = "Team_Gundam A+";
+
 CRGB leds[LED_CNT];
+
+
+// TODO?: 
+// Webserver interface... if time allows 
+
+void connectToServer() {
+
+}
+/* 
+ * 
+ *
+ * 
+ */
+void initWebserver() {
+  IPAddress local_ip(192,168,1,1);
+  IPAddress gateway(192,168,1,1);
+  IPAddress subnet(255,255,255,0);
+
+  WebServer server(80);
+
+  WiFi.softAP(ssid, key);
+  WiFi.softAPConfig(local_ip, gateway, subnet);
+  delay(100);
+
+  server.begin();
+
+  // server.on("/", connectToServer);
+}
+
+  
+
 
 /* 
  * Iterate through RGB LEDs and set 
@@ -291,8 +327,9 @@ byte effectLoop(uint8_t effect_code) {
 void setup() {
   Serial.begin(115200); 
   ledInit();
-
+  
   effectLoop(EFFECT_GREEN_BLINK);
+  initWebserver();
   effectLoop(EFFECT_YELLOW_BLINK);
   effectLoop(EFFECT_RED_BLINK);
   // effectLoop(EFFECT_MEDBLUE_CYCLE);
